@@ -8,49 +8,63 @@
 <body>
     <div class="container">
         <h1>Chat App <small id="status" class="badge bg-danger">Status</small></h1>
-        
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-room">
-        Create chat room
-        </button>
 
-        <h2>Rooms</h2>
-        <div id="rooms-list" class="list-group">
-        </div>
-
-        <div id="current-room" style="display: none">
-            <h2>Current room</h2>
-            <button id="leave-room" type="button" class="btn btn-warning" >
-                Leave room
-            </button>
-            <div id="room-owner" style="display: hide;">
-                <hr>
-                <p>You are the owner of this room</p>
-                <button id="rename-room-button" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#rename-room">
-                    Rename chat room
-                </button>
-                <button id="remove-room-button" type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#remove-room">
-                    Remove chat room
-                </button>
-                <hr>
+        <form id="login-form">
+            <div class="mb-3">
+                <label class="form-label">Login:</label>
+                <input class="form-control" id="login" type="text" required value="somebody1">
+                <label class="form-label">Telegram login:</label>
+                <input class="form-control" id="telegramLogin" type="text" value="">
+                <input type="submit" type="button" class="btn btn-primary" value="Login">
             </div>
+        </form>
 
-            <h3>Members</h3>
-            <ul id="members-list" class="list-group">
-            </ul>
-
-            <h3>Room messages</h3>
-
-            <form id="send-message-form">
-                <div class="mb-3">
-                <label class="form-label">Your new message text:</label>
-                <textarea class="form-control" id="sendMessageText" required rows="4" cols="40" placeholder="Type your message here..."></textarea>
-                <input type="submit" type="button" class="btn btn-primary" value="Send">
+        <div id="app" style="display: none;">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-room">
+                Create chat room
+                </button>
+        
+                <h2>Rooms</h2>
+                <div id="rooms-list" class="list-group">
                 </div>
-            </form>
-
-            <ul id="messages-list" class="list-group">
-            </ul>
+        
+                <div id="current-room" style="display: none">
+                    <h2>Current room</h2>
+                    <button id="leave-room" type="button" class="btn btn-warning" >
+                        Leave room
+                    </button>
+                    <div id="room-owner" style="display: hide;">
+                        <hr>
+                        <p>You are the owner of this room</p>
+                        <button id="rename-room-button" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#rename-room">
+                            Rename chat room
+                        </button>
+                        <button id="remove-room-button" type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#remove-room">
+                            Remove chat room
+                        </button>
+                        <hr>
+                    </div>
+        
+                    <h3>Members</h3>
+                    <ul id="members-list" class="list-group">
+                    </ul>
+        
+                    <h3>Room messages</h3>
+        
+                    <form id="send-message-form">
+                        <div class="mb-3">
+                        <label class="form-label">Your new message text:</label>
+                        <textarea class="form-control" id="sendMessageText" required rows="4" cols="40" placeholder="Type your message here..."></textarea>
+                        <input type="submit" type="button" class="btn btn-primary" value="Send">
+                        </div>
+                    </form>
+        
+                    <ul id="messages-list" class="list-group">
+                    </ul>
+                </div>
         </div>
+        
+        
     </div>
 
     <div id="create-room" class="modal" tabindex="-1">

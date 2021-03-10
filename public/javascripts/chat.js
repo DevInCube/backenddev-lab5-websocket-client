@@ -11,17 +11,23 @@ let messages = [];
 const isTestMode = true;
 let testPostingInterval = null;
 
-connection.addEventListener('open', () => { 
-    setStatus(true);
-    getRooms();
-});
+function storeToken(token) {
+    localStorage.setItem("token", token);
+}
+
+function getToken() {
+    return localStorage.getItem("token");
+}
+
+connection.addEventListener('open', () => setStatus(true));
 connection.addEventListener('close', () => setStatus(false));
 connection.addEventListener('error', () => console.log(`Connection error`));
 
 class AppMessage {
-    constructor(type = "undefined") {
+    constructor(token, type = "undefined", payload = null) {
+        this.token = token;
         this.type = type;
-        this.payload = null;
+        this.payload = payload;
     }
 }
 
@@ -41,6 +47,7 @@ class ChatMessage {
 }
 
 const MessageTypes = {
+    CLIENT_GET_TOKEN: "get-token",
     CLIENT_GET_ROOMS_LIST: "get-rooms-list",
     CLIENT_CREATE_ROOM: "create-room",
     CLIENT_RENAME_ROOM: "rename-room",
@@ -51,6 +58,7 @@ const MessageTypes = {
     CLIENT_GET_MEMBERS_LIST: "get-members-list",
     CLIENT_POST_MESSAGE: "post-message",
     //
+    SERVER_TOKEN: "token",
     SERVER_ROOMS_LIST: "rooms-list",
     SERVER_ROOM_CREATED: "room-created",
     SERVER_ROOM_RENAMED: "room-renamed",
@@ -73,19 +81,26 @@ function sendMessage(appMessage) {
 
 // clientMessages.js
 
+function getTokenAppMessage(login, telegramLogin) {
+    return new AppMessage(null, MessageTypes.CLIENT_GET_TOKEN, {
+        login: login,
+        telegramLogin: telegramLogin,
+    });
+}
+
 function getRoomsListAppMessage() {
-    const message = new AppMessage(MessageTypes.CLIENT_GET_ROOMS_LIST);
+    const message = new AppMessage(getToken(), MessageTypes.CLIENT_GET_ROOMS_LIST);
     return message;
 }
 
 function createRoomAppMessage(roomName) {
-    const message = new AppMessage(MessageTypes.CLIENT_CREATE_ROOM);
+    const message = new AppMessage(getToken(), MessageTypes.CLIENT_CREATE_ROOM);
     message.payload = roomName;
     return message;
 }
 
 function renameRoomAppMessage(oldRoomName, newRoomName) {
-    const message = new AppMessage(MessageTypes.CLIENT_RENAME_ROOM);
+    const message = new AppMessage(getToken(), MessageTypes.CLIENT_RENAME_ROOM);
     message.payload = {
         oldRoomName: oldRoomName,
         newRoomName: newRoomName,
@@ -94,37 +109,37 @@ function renameRoomAppMessage(oldRoomName, newRoomName) {
 }
 
 function removeRoomAppMessage(roomName) {
-    const message = new AppMessage(MessageTypes.CLIENT_RENAME_ROOM);
+    const message = new AppMessage(getToken(), MessageTypes.CLIENT_RENAME_ROOM);
     message.payload = roomName;
     return message;
 }
 
 function joinRoomAppMessage(roomName) {
-    const message = new AppMessage(MessageTypes.CLIENT_JOIN_ROOM);
+    const message = new AppMessage(getToken(), MessageTypes.CLIENT_JOIN_ROOM);
     message.payload = roomName;
     return message;
 }
 
 function leaveRoomAppMessage(roomName) {
-    const message = new AppMessage(MessageTypes.CLIENT_LEAVE_ROOM);
+    const message = new AppMessage(getToken(), MessageTypes.CLIENT_LEAVE_ROOM);
     message.payload = roomName;
     return message;
 }
 
 function getLastMessagesListAppMessage(roomName) {
-    const message = new AppMessage(MessageTypes.CLIENT_GET_LAST_MESSAGES_LIST);
+    const message = new AppMessage(getToken(), MessageTypes.CLIENT_GET_LAST_MESSAGES_LIST);
     message.payload = roomName;
     return message;
 }
 
 function getMembersListAppMessage(roomName) {
-    const message = new AppMessage(MessageTypes.CLIENT_GET_MEMBERS_LIST);
+    const message = new AppMessage(getToken(), MessageTypes.CLIENT_GET_MEMBERS_LIST);
     message.payload = roomName;
     return message;
 }
 
 function postMessageAppMessage(text) {
-    const message = new AppMessage(MessageTypes.CLIENT_POST_MESSAGE);
+    const message = new AppMessage(getToken(), MessageTypes.CLIENT_POST_MESSAGE);
     message.payload = text;
     return message;
 }
@@ -182,6 +197,13 @@ function setStatus(connected) {
     } else {
         o.className = "badge bg-danger";
         o.innerText = "Disconnected";
+    }
+
+    if (!connected) {
+        const appEl = document.getElementById("app");
+        hide(appEl);
+        const loginEl = document.getElementById("login-form");
+        show(loginEl);
     }
 }
 
@@ -368,6 +390,21 @@ function onRoomSelected(ev) {
     }
 }
 
+function onToken(token) {
+    if (!token) {
+        showError("Invalid token");
+        return;
+    }
+
+    storeToken(token);
+    getRooms();
+
+    const appEl = document.getElementById("app");
+    show(appEl);
+    const loginEl = document.getElementById("login-form");
+    hide(loginEl);
+}
+
 function onRoomsList(rooms) {
     validateArray(rooms, validateRoom);
 
@@ -457,6 +494,12 @@ connection.addEventListener('message', (message) => {
         Object.setInstanceOf(messageObject, AppMessage);
 
         switch (messageObject.type) {
+            case MessageTypes.SERVER_TOKEN: {
+                const token = messageObject.payload;
+                validateString(token);
+                onToken(token);
+                break;
+            }
             case MessageTypes.SERVER_ROOMS_LIST: {
                 const roomsList = messageObject.payload;
                 onRoomsList(roomsList);
@@ -620,6 +663,23 @@ sendMessageFormEl.addEventListener("submit", ev => {
 
     if (isTestMode) {
         onMessagePosted({timestamp: Date.now(), author: userName, text: text});
+    }
+});
+
+const loginForm = document.getElementById("login-form");
+loginForm.addEventListener("submit", ev => {
+    ev.preventDefault();
+
+    const loginEl = document.getElementById("login");
+    userName = loginEl.value;
+
+    const telegramLoginEl = document.getElementById("login");
+    const telegramLogin = telegramLoginEl.value;
+
+    sendMessage(getTokenAppMessage(userName, telegramLogin));
+
+    if (isTestMode) {
+        onToken("bla-bla-token");
     }
 });
 
