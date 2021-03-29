@@ -52,8 +52,8 @@ const MessageTypes = {
     CLIENT_CREATE_ROOM: "create-room",
     CLIENT_RENAME_ROOM: "rename-room",
     CLIENT_REMOVE_ROOM: "remove-room",
-    CLIENT_JOIN_ROOM: "remove-room",
-    CLIENT_LEAVE_ROOM: "remove-room",
+    CLIENT_JOIN_ROOM: "join-room",
+    CLIENT_LEAVE_ROOM: "leave-room",
     CLIENT_GET_LAST_MESSAGES_LIST: "get-last-messages-list",
     CLIENT_GET_MEMBERS_LIST: "get-members-list",
     CLIENT_POST_MESSAGE: "post-message",
@@ -109,7 +109,7 @@ function renameRoomAppMessage(oldRoomName, newRoomName) {
 }
 
 function removeRoomAppMessage(roomName) {
-    const message = new AppMessage(getToken(), MessageTypes.CLIENT_RENAME_ROOM);
+    const message = new AppMessage(getToken(), MessageTypes.CLIENT_REMOVE_ROOM);
     message.payload = roomName;
     return message;
 }
@@ -230,6 +230,7 @@ function setJoinedRoom(room) {
 
     updateRooms(rooms);
     getMembers(room.name);
+    getMessages(room.name);
 
     if (isTestMode) {
         setTimeout(() => onMemberJoined("new joined 2 member"), 1000);
@@ -446,8 +447,6 @@ function onRoomRemoved(room) {
 }
 
 function onCurrentRoomChanged(room) {
-    validateRoom(room);
-
     setJoinedRoom(room);
 }
 
@@ -491,7 +490,7 @@ connection.addEventListener('message', (message) => {
     const jsonText = message.data;
     try {
         const messageObject = JSON.parse(jsonText);
-        Object.setInstanceOf(messageObject, AppMessage);
+        Object.setPrototypeOf(messageObject, AppMessage);
 
         switch (messageObject.type) {
             case MessageTypes.SERVER_TOKEN: {
@@ -638,7 +637,12 @@ leaveRoomButtonEl.addEventListener("click", ev => {
         return;
     }
 
-    setLeftRoom();
+    const message = leaveRoomAppMessage(currentRoomName);
+    sendMessage(message);
+
+    if (isTestMode) {
+        setLeftRoom();
+    }
 });
 
 // send message
@@ -673,7 +677,7 @@ loginForm.addEventListener("submit", ev => {
     const loginEl = document.getElementById("login");
     userName = loginEl.value;
 
-    const telegramLoginEl = document.getElementById("login");
+    const telegramLoginEl = document.getElementById("telegramLogin");
     const telegramLogin = telegramLoginEl.value;
 
     sendMessage(getTokenAppMessage(userName, telegramLogin));
