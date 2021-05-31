@@ -1,13 +1,12 @@
 const path = require('path');
 const http = require('http');
 const express = require('express');
-const bodyParser = require('body-parser');
 const WebSocketServer = require('ws').Server;
 
 const app = express();
 app.use(express.static("public"));
 
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.urlencoded({extended: true}));
 const server = http.createServer(app);
 
 const wsServer = new WebSocketServer({ server });

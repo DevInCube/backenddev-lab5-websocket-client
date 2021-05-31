@@ -687,11 +687,15 @@ loginForm.addEventListener("submit", ev => {
     }
 });
 
-// utils.js
-function show(el) {
-    el.style.display = "block";
-}
+const logoutButton = document.getElementById("logout-button");
+logoutButton.addEventListener("click", ev => {
+    localStorage.removeItem("token");
+    const appEl = document.getElementById("app");
+    hide(appEl);
+    const loginEl = document.getElementById("login-form");
+    show(loginEl);
 
-function hide(el) {
-    el.style.display = "none";
-}
+    if (isTestMode) {
+        clearInterval(testPostingInterval);
+    }
+});
